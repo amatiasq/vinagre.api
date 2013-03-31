@@ -1,0 +1,19 @@
+{
+	"name": "esta-hecho",
+	"version": "0.1.0",
+	"authors": [
+		"A. Matías Quezada <amatiasq@gmail.com>",
+	],
+	"dependencies": {
+		"underscore": "*",
+	},
+	"devDependencies": {
+		"mocha": "1.7.x",
+		"sinon": "1.5.x",
+		"jshint": "1.1.x",
+	},
+	"scripts": {
+		"test": "jshint . && mocha"
+	}
+}
+
