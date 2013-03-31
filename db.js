@@ -18,7 +18,7 @@ var connection = {
 		console.log('[DB] Executing --[', sql, ']-- with params --[', params, ']--');
 		this.client.query(sql, params, function(err, results, fields) {
 			if (err) return prom.reject(err);
-			prom.resolve([ results, fields ]);
+			prom.resolve(results);
 		});
 		return prom.future;
 	},

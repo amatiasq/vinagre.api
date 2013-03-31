@@ -23,42 +23,38 @@ function e(err) {
 	console.error(err);
 }
 
+function listener(callback) {
+	return function(req, res) {
+		callback(req).then(function(data) {
+			console.log('[SUCCEED]', data);
+			res.status(200).send(data);
+		}, function(err) {
+			console.error('[ERROR]', err);
+			res.status(500).send(null);
+		});
+	};
+}
+
 function createResource(name, plural) {
 	plural = plural || name + 's';
 	var handler = resource(connection, name);
 	console.log('Creting resource REST', name);
 
-	app.get(   '/v0/' + plural,          function(req, res) { handler.findAll()                      .then(res.send, e) });
-	app.get(   '/v0/' + plural + '/:id', function(req, res) { handler.findById(req.params.id)        .then(res.send, e) });
-	app.post(  '/v0/' + plural,          function(req, res) { debugger; handler.add(req.body)                  .then(res.send, e) });
-	app.put(   '/v0/' + plural + '/:id', function(req, res) { handler.update(req.params.id, req.body).then(res.send, e) });
-	app.delete('/v0/' + plural + '/:id', function(req, res) { handler.del(req.params.id)             .then(res.send, e) });
+	app.get(   '/v0/' + plural,          listener(function(req) { return handler.findAll() }));
+	app.get(   '/v0/' + plural + '/:id', listener(function(req) { return handler.findById(req.params.id) }));
+	app.post(  '/v0/' + plural,          listener(function(req) { return handler.add(req.body) }));
+	app.put(   '/v0/' + plural + '/:id', listener(function(req) { return handler.update(req.params.id, req.body) }));
+	app.delete('/v0/' + plural + '/:id', listener(function(req) { return handler.del(req.params.id) }));
 }
 
-app.get('/v0/startup', function(req, res) {
-	res.jsonp([{
-		id: 0,
-		name: 'Sunrise',
-		description: 'Building a better calendar',
-		url: 'http://www.sunrise.am/'
-	}, {
-		id: 1,
-		name: 'Stellarkite',
-		description: 'Stellarkite is a multidisciplinary group of scientists ' +
-			'and engineers born to geekify the world',
-		url: 'http://www.stellarkite.com'
-	}, {
-		id: 2,
-		name: 'Lovely',
-		description: 'Building a platform for apartment rentals - a $10bn market opportunity',
-		url: 'http://livelovely.com/'
-	}]);
-});
-
-app.get('/v0/startup/search', function(req, res) {
-	var query = req.params.query;
-	return connection.single('SELECT * FROM ' + name + ' WHERE name=? OR description=?', query, query)
-		.spread(function(results, rows) { return rows });
+app.get('/v0/startups-search', function(req, res) {
+	console.log(req.query);
+	var query = '%' + req.query.query + '%';
+	return connection.single('SELECT * FROM startup WHERE name LIKE ? OR short_desc LIKE ?', [ query, query ]).then(function(results) {
+		res.status(200).jsonp(results);
+	}, function(err) {
+		res.status(500).send(null);
+	});
 });
 
 createResource('startup');
